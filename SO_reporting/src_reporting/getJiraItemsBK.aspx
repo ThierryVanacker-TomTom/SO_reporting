@@ -26,13 +26,14 @@ webClient.Headers.Add("Content-Type", "application/json; charset=utf-8")
 'webClient.Headers.Add("Authorization", "Basic " & "c3ZjX3N0c19qaXJhX3VzZXI6RjIzcnQjNDV0eSM0")
 webClient.Headers.Add("Authorization", "Bearer " & "NjEwNTg3NTc5NjU0Ot6RDMksA3OJYGutuCZaMVZs6e1i")
 Dim result As String 
-'result = webClient.DownloadString("http://127.0.0.1/getsuppipeitem.asp?id=1")
+'result = webClient.DownloadString("https://soreporting.azurewebsites.net/getsuppipeitem.asp?id=1")
 Dim url As String
 dim prj as string
 
 dim jql as String
 jql = request.querystring("jql")
-if jql = "" then jql = " issuekey=""OM-974"" "
+'if jql = "" then jql = "project=""STS"""
+if jql = "" then jql = "issuekey=""STS-714"""
 
 '	jql = ""
 '	jql = jql & " project = ""STS"" "
@@ -46,7 +47,7 @@ if jql = "" then jql = " issuekey=""OM-974"" "
 
 'url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & prj & """ and component=""RSO Global Alignment""&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
 'url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & prj & """&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
-url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=" & jql & "&fields=summary,issuetype,status,created,updated,duedate,resolution,resolutiondate,customfield_20162,customfield_20164,customfield_20268,customfield_20363,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
+url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=" & Server.UrlEncode(jql) & "&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
 'response.write (url)
 
 result = webClient.DownloadString(url)
@@ -108,7 +109,7 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<duedate>" & "" & "</duedate>" & vbcrlf
 					else
-						xml = xml & "<duedate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</duedate>" & vbcrlf
+						xml = xml & "<duedate>" & xmlsafe(toDD_MM_YYYY("" & field.value.tostring)) & "</duedate>" & vbcrlf
 					end if
 					end if
 
@@ -116,23 +117,7 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<target_duedate>" & "" & "</target_duedate>" & vbcrlf
 					else
-						xml = xml & "<target_duedate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</target_duedate>" & vbcrlf
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20164") then
-					if (field.value is nothing) then
-						xml = xml & "<bl_enddate>" & "" & "</bl_enddate>" & vbcrlf
-					else
-						xml = xml & "<bl_enddate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</bl_enddate>" & vbcrlf
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20162") then
-					if (field.value is nothing) then
-						xml = xml & "<enddate>" & "" & "</enddate>" & vbcrlf
-					else
-						xml = xml & "<enddate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</enddate>" & vbcrlf
+						xml = xml & "<target_duedate>" & xmlsafe(toDD_MM_YYYY("" & field.value.tostring)) & "</target_duedate>" & vbcrlf
 					end if
 					end if
 
@@ -149,50 +134,11 @@ For Each pair In parentJson
 					end if
 					end if
 
-					if (field.key.tostring = "resolution") then
-					if (field.value is nothing) then
-						xml = xml & "<resolution>" & "" & "</resolution>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "name") then
-							xml = xml & "<resolution>" & xmlsafe("" & field_in_status.value.tostring) & "</resolution>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20363") then
-					if (field.value is nothing) then
-						xml = xml & "<assigned_unit>" & "" & "</assigned_unit>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "value") then
-							xml = xml & "<assigned_unit>" & xmlsafe("" & field_in_status.value.tostring) & "</assigned_unit>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20268") then
-					if (field.value is nothing) then
-						xml = xml & "<requesting_unit>" & "" & "</requesting_unit>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "value") then
-							xml = xml & "<requesting_unit>" & xmlsafe("" & field_in_status.value.tostring) & "</requesting_unit>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
 					if (field.key.tostring = "created") then
 					if (field.value is nothing) then
 						xml = xml & "<created>" & "" & "</created>" & vbcrlf
 					else
-						xml = xml & "<created>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</created>" & vbcrlf
+						xml = xml & "<created>" & xmlsafe(toDD_MM_YYYY("" & field.value.tostring)) & "</created>" & vbcrlf
 					end if
 					end if
 
@@ -200,7 +146,7 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<updated>" & "" & "</updated>" & vbcrlf
 					else
-						xml = xml & "<updated>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</updated>" & vbcrlf
+						xml = xml & "<updated>" & xmlsafe(toDD_MM_YYYY("" & field.value.tostring)) & "</updated>" & vbcrlf
 					end if
 					end if
 
@@ -208,13 +154,13 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<resolutiondate>" & "" & "</resolutiondate>" & vbcrlf
 					else
-						xml = xml & "<resolutiondate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</resolutiondate>" & vbcrlf
+						xml = xml & "<resolutiondate>" & xmlsafe(toDD_MM_YYYY("" & field.value.tostring)) & "</resolutiondate>" & vbcrlf
 					end if
 					end if
 
 					if (field.key.tostring = "components") then
 					if (field.value is nothing) then
-						xml = xml & "<resolutiondate>" & "" & "</resolutiondate>" & vbcrlf
+						xml = xml & "<components>" & "" & "</components>" & vbcrlf
 					else
 						tmp = "||"
 						for each comp_item in field.value
@@ -235,6 +181,7 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<sprintinfo>" & "" & "</sprintinfo>" & vbcrlf
 						xml = xml & "<sprintcompletedate>" & "" & "</sprintcompletedate>" & vbcrlf
+
 					else
 						tmp = "||"
 						for each sprintinfo_item in field.value
@@ -246,7 +193,8 @@ For Each pair In parentJson
 						next
 						if tmp = "||" then tmp = ""
 						xml = xml & "<sprintinfo>" & xmlsafe(tmp) & "</sprintinfo>" & vbcrlf
-						xml = xml & "<sprintcompletedate>" & xmlsafe(getSprintLatestCompletedDate(tmp)) & "</sprintcompletedate>" & vbcrlf
+						'xml = xml & "<sprintcompletedate>" & xmlsafe(toDD_MM_YYYY("" & getSprintLatestCompletedDate(tmp))) & "</sprintcompletedate>" & vbcrlf
+						xml = xml & "<sprintcompletedate>" & xmlsafe(tmp) & "</sprintcompletedate>" & vbcrlf
 					end if
 					end if
 				next 'loop through all the fields
@@ -284,7 +232,7 @@ Next
 
 xml = xml & "</item_result>" & vbcrlf
 
-'Server.ScriptTimeout = 60*60
+Server.ScriptTimeout = 60*60
 Response.ContentType = "text/xml"
 Response.CharSet = "UTF-8"
 response.write (xml)
@@ -358,7 +306,7 @@ For Each pair In parentJson
 				for each histitem in field.value 'array loop
 				for each p in histitem 'dictionary loop
 					if (p.Key.tostring = "created") then
-						created = toYYYYMMDD(p.Value.tostring)
+						created = toDD_MM_YYYY(p.Value.tostring)
 					end if
 					if (p.key.tostring = "items") then 'items is an array, loop through the items, within the items loop through as a dictionary
 						for each itemitem in p.value 'array loop
@@ -376,8 +324,6 @@ For Each pair In parentJson
 								if (p_item.key.tostring = "toString" and bln) then
 									parseHist_ = parseHist_ & p_item.value.tostring & "@@"	
 								end if
-								'add here
-								
 							end if
 					'		
 						next
@@ -395,5 +341,11 @@ function toYYYYMMDD(s)
 '2018-05-29T12:27:48.000+0000 comes in
 '20180529 goes out
 toYYYYMMDD = mid(s, 1, 4) & mid(s, 6, 2) & mid(s, 9, 2)
+end function
+
+function toDD_MM_YYYY(s)
+'2018-05-29T12:27:48.000+0000 comes in
+'26/05/2018 goes out
+toDD_MM_YYYY = mid(s, 9, 2) & "/" & mid(s, 6, 2) &"/" & mid(s, 1, 4)
 end function
 </script>

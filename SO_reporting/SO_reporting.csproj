@@ -67,44 +67,66 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="baseline_enddate_shifts.asp" />
-    <Content Include="getJiraItems.aspx" />
-    <Content Include="getJiraItemsbk.aspx" />
-    <Content Include="getJiraItems_changlog.aspx" />
-    <Content Include="jsonObject.class.asp" />
-    <Content Include="om.xml" />
-    <Content Include="show_soim_adherence_to_4_10_deadlines_ac.asp" />
-    <Content Include="show_soim_adherence_to_4_10_deadlines_rc.asp" />
-    <Content Include="show_sor_risk_decision_deadline_missrate.asp" />
-    <Content Include="show_sor_risk_impact_reduction.asp" />
-    <Content Include="src_kpi.asp" />
-    <Content Include="src_kpi_detail.asp" />
-    <Content Include="src_kpi_detail.xml" />
-    <Content Include="src_kpi_fulfill_missrate.asp" />
-    <Content Include="src_kpi_header.asp" />
-    <Content Include="src_kpi_inprogress_throughput.asp" />
-    <Content Include="src_kpi_ontime_missrate.asp" />
-    <Content Include="src_kpi_ontime_missrate_done.asp" />
-    <Content Include="src_kpi_rejection_rate.asp" />
-    <Content Include="src_kpi_throughput.asp" />
+    <Content Include="so_reporting\baseline_enddate_shifts.asp" />
+    <Content Include="so_reporting\getJiraItems.aspx" />
+    <Content Include="so_reporting\getJiraItemsbk.aspx" />
+    <Content Include="so_reporting\getJiraItems_changlog.aspx" />
+    <Content Include="so_reporting\jsonObject.class.asp" />
+    <Content Include="so_reporting\om.xml" />
+    <Content Include="so_reporting\show_soim_adherence_to_4_10_deadlines_ac.asp" />
+    <Content Include="so_reporting\show_soim_adherence_to_4_10_deadlines_rc.asp" />
+    <Content Include="so_reporting\show_sor_risk_decision_deadline_missrate.asp" />
+    <Content Include="so_reporting\show_sor_risk_impact_reduction.asp" />
+    <Content Include="so_reporting\src_kpi.asp" />
+    <Content Include="so_reporting\src_kpi_detail.asp" />
+    <Content Include="so_reporting\src_kpi_detail.xml" />
+    <Content Include="so_reporting\src_kpi_fulfill_missrate.asp" />
+    <Content Include="so_reporting\src_kpi_header.asp" />
+    <Content Include="so_reporting\src_kpi_inprogress_throughput.asp" />
+    <Content Include="so_reporting\src_kpi_ontime_missrate.asp" />
+    <Content Include="so_reporting\src_kpi_ontime_missrate_done.asp" />
+    <Content Include="so_reporting\src_kpi_rejection_rate.asp" />
+    <Content Include="so_reporting\src_kpi_throughput.asp" />
+    <Content Include="src_reporting\amy.txt" />
+    <Content Include="src_reporting\bigp.aspx" />
+    <Content Include="src_reporting\bigpV2.aspx" />
+    <Content Include="src_reporting\bigpV23.aspx" />
+    <Content Include="src_reporting\getJiraItems.aspx" />
+    <Content Include="src_reporting\getJiraItemsBK.aspx" />
+    <Content Include="src_reporting\getJiraItemsMoebius.aspx" />
+    <Content Include="src_reporting\getJiraItemsSSE.aspx" />
+    <Content Include="src_reporting\jsonObject.class.asp" />
+    <Content Include="src_reporting\modFunctions.inc" />
+    <Content Include="src_reporting\moebius\modFunctions.inc" />
+    <Content Include="src_reporting\moebius\src_kpi.asp" />
+    <Content Include="src_reporting\moebius\src_kpi_header.asp" />
+    <Content Include="src_reporting\moebius\src_kpi_inprogress_throughput.asp" />
+    <Content Include="src_reporting\moebius\src_kpi_rejection_rate.asp" />
+    <Content Include="src_reporting\moebius\srs_kpi_ontime_missrate.asp" />
+    <Content Include="src_reporting\older_functions.txt" />
+    <Content Include="src_reporting\src_kpi.asp" />
+    <Content Include="src_reporting\src_kpi_detail.asp" />
+    <Content Include="src_reporting\src_kpi_detail.xml" />
+    <Content Include="src_reporting\src_kpi_header.asp" />
+    <Content Include="src_reporting\src_kpi_inprogress_throughput.asp" />
+    <Content Include="src_reporting\src_kpi_ontime_missrate.asp" />
+    <Content Include="src_reporting\src_kpi_rejection_rate.asp" />
+    <Content Include="src_reporting\src_kpi_sso_ontime_missrate.asp" />
+    <Content Include="src_reporting\src_kpi_sso_rejection_rate.asp" />
     <Content Include="Web.config" />
-    <Content Include="WebForm1.aspx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WebForm1.aspx.cs">
-      <DependentUpon>WebForm1.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="WebForm1.aspx.designer.cs">
-      <DependentUpon>WebForm1.aspx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <Content Include="PI Metric Sheet Template Box Plot Percentage 2014.xlsx" />
-    <Content Include="PI Work Item On Time Delivery Miss Rate 2018.xlsx" />
-    <Content Include="PI Work Item Rejection Rate 2018.xlsx" />
+    <Content Include="src_reporting\moebius\getJiraItemsMoebius.aspx_" />
+    <Content Include="src_reporting\PI Metric Sheet Template Box Plot Percentage 2014.xlsx" />
+    <Content Include="src_reporting\PI Work Item On Time Delivery Miss Rate 2018.xlsx" />
+    <Content Include="src_reporting\PI Work Item Rejection Rate 2018.xlsx" />
+    <Content Include="so_reporting\PI Metric Sheet Template Box Plot Percentage 2014.xlsx" />
+    <Content Include="so_reporting\PI Work Item On Time Delivery Miss Rate 2018.xlsx" />
+    <Content Include="so_reporting\PI Work Item Rejection Rate 2018.xlsx" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

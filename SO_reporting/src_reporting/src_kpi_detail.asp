@@ -147,22 +147,22 @@ if arrp(ap) <> "" then
 		bln = true
 		For Each field_in_item_ In item_.ChildNodes
 			'check if correct issuetype
-			' if field_in_item_.BaseName = "issuetype" then
-			' if instr("||Epic||Initiative||", "||" & field_in_item_.Text & "||") > 0 then
-				' bln = false
-			' end if
-			' end if
-			' 'check if correct components
-			' if field_in_item_.BaseName = "components" then
-			' arr = split(field_in_item_.Text, "||")
-			' for a = lbound(arr) to ubound(arr)
-			' if arr(a) <> "" then
-				' if instr(lcase("||Events organization||Hosting Sharepoint sites||R&D||STS internal processes||STS Newsletter||TD platform||"),lcase("||" & arr(a) & "||")) > 0 then
-					' bln = false
-				' end if
-			' end if
-			' next
-			' end if
+			if field_in_item_.BaseName = "issuetype" then
+			if instr("||Epic||Initiative||", "||" & field_in_item_.Text & "||") > 0 then
+				bln = false
+			end if
+			end if
+			'check if correct components
+			if field_in_item_.BaseName = "components" then
+			arr = split(field_in_item_.Text, "||")
+			for a = lbound(arr) to ubound(arr)
+			if arr(a) <> "" then
+				if instr(lcase("||Innovation platforms||Events organization||Hosting Sharepoint sites||R&D||STS internal processes||STS Newsletter||TD platform||"),lcase("||" & arr(a) & "||")) > 0 then
+					bln = false
+				end if
+			end if
+			next
+			end if
 			'check if done in this month
 			if field_in_item_.BaseName = "transitions_history" then
 			    bln2 = False
@@ -483,7 +483,7 @@ if false then
 				if comp <> "[]" then comp = getJson(comp, "name")
 			end if
 			'if component one of below then do NOT show
-			if instr(lcase(",Events organization,Hosting Sharepoint sites,R&D,STS internal processes,STS Newsletter,TD platform,"),"," & lcase(trim(comp)) & ",") > 0 then
+			if instr(lcase(",Innovation platforms,Events organization,Hosting Sharepoint sites,R&D,STS internal processes,STS Newsletter,TD platform,"),"," & lcase(trim(comp)) & ",") > 0 then
 				bln = false
 			else
 				'get state history
@@ -995,12 +995,12 @@ End If
 End Function
 
 Function getJiraItems(project,yearmonth)
-'response.write "http://127.0.0.1/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & ""
+'response.write "https://soreporting.azurewebsites.net/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & ""
 randomize timer
 'On Error Resume Next
 Dim xmlhttp
 Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
-xmlhttp.Open "GET", "http://127.0.0.1/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & "", False
+xmlhttp.Open "GET", "https://soreporting.azurewebsites.net/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & "", False
 xmlhttp.send
 getJiraItems = xmlhttp.responseText
 Set xmlhttp = Nothing
@@ -1211,7 +1211,7 @@ if arr(a) <> "" then
 	end if
 end if
 next
-if getSettoDone = "00000000" then getSettoDone = ""
+
 end function
 
 function donethismonth(allstates, ym)

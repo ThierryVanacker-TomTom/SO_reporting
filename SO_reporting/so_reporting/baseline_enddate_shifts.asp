@@ -69,13 +69,6 @@ Dim item_
 Dim field_in_item_
 dim nodelist
 
-dim xml2
-dim objXML2
-set objXML2 = createobject("MSXML.DOMDocument")
-Dim item2_
-Dim field_in_item2_
-dim nodelist2
-
 dim label
 dim hist_
 dim comp
@@ -91,19 +84,15 @@ dim yearmonth
 yearmonth = request.querystring("yearmonth")
 dim settodone
 
-dim created
-dim decision_created_on
-dim subtasks
-dim parent
-dim parentcreated
-dim processed_parents
-processed_parents = "||"
-
-dim dt1
-dim dt2
-
 dim fso
 dim f
+
+arrP = split("STSPES,STSCNT,MOEBIUS,RES", ",")
+'arr = split("STSPES", ",")
+'arr = split("STSCNT,STSPES", ",")
+arrP = split(request.querystring("project"), ",")
+'response.write request.querystring("project") & "<br>"
+'response.write ubound(arr) & "<br>"
 
 dim dt
 dim from_
@@ -112,45 +101,36 @@ dim to_
 yearmonth = request.querystring("yearmonth")
 if (yearmonth = "") then yearmonth = right("0000" & year(date),4) & right("00" & Month(date),2)
 
-'kata: changed dateadd from "w", -10 to extend the deadline to 14 calendar days
-tmp = dateserial(mid(yearmonth,1,4), mid(yearmonth,5,2), 1)
+dt = dateserial(mid(yearmonth,1,4), mid(yearmonth,5,2), 1)
 'format into 2018/06/30
-dt = dateadd("d", -14, tmp)
 from_ = right("0000" & year(dt),4) & "/" & right("00" & month(dt),2) & "/" & right("00" & day(dt),2)
-dt = dateadd("m", 1, tmp)
-dt = dateadd("d", -14, dt)
+dt = dateadd("m", 1, dt)
+dt = dateadd("d", -1, dt)
 to_ = right("0000" & year(dt),4) & "/" & right("00" & month(dt),2) & "/" & right("00" & day(dt),2)
 
 dim jql
 jql = ""
-jql = jql & " project = ""SOIM"" "
-jql = jql & " and issuetype in (""Prevent Recurrence"",""Corrective action"") " ',""Fix""
-jql = jql & " and issueFunction in subtasksOf("" "
-jql = jql & " project = 'SOIM' "
-'14JUN2022 - added 4 new issuetypes : Service"",""Tool"",""Program"",""Process
-jql = jql & " AND issuetype in ('Source Incident','MoMa Incident','KPI','Audit', 'Service','Tool','Program','Process') "
-jql = jql & " AND createdDate >= '" & from_ & "' AND createdDate <= '" & to_ & "' "") "
-
-'jql = jql & " AND ""Assigned Unit"" in (""SO MOMA"",""SO SSO"",""SO APA"",""SO AME"",""SO PMO"",""SO GDT"",""SO EAP"", ""SO ECA"", ""SO SAMEA"", ""SO EECA"", ""SO AFR"", ""SO WCE"", ""SO STS"", ""SO SAM"", ""SO PDV"", ""SO OCE"", ""SO NEA"", ""SO NAM"", ""SO LAM"")"
-'jql = jql & " AND "
-'jql = jql & " status changed to closed during (""" & from_ & """, """ & to_ & """)"
-'' jql = jql & " and issuekey = 'OM-19434' "
-'jql = jql & " AND ""End date"" >= 2018-01-01 "
-'' jql = jql & " AND cf[20162] >= ""2018/01/01"" "
+jql = jql & " project = ""OM"" "
+'jql = jql & " and issuekey = ""OM-974"" "
+jql = jql & " AND issuetype in (""Activity - Archive Validation"", ""Activity - Feasibility"", ""Activity - Manual Production"", ""Activity - Other"", ""Activity - Quality Analysis"", ""Activity - SQR Measurement"", ""Activity - Source Acquisition"", ""Activity - Source Acquisition - Field"", ""Activity - Source Analysis"", ""Activity - Source Preparation"")"
+jql = jql & " AND ""Assigned Unit"" in (""SO MOMA"",""SO SSO"",""SO APA"",""SO AME"",""SO PMO"",""SO GDT"",""SO EAP"", ""SO ECA"", ""SO SAMEA"", ""SO EECA"", ""SO AFR"", ""SO WCE"", ""SO STS"", ""SO SAM"", ""SO PDV"", ""SO OCE"", ""SO NEA"", ""SO NAM"", ""SO LAM"")"
+jql = jql & " AND "
+jql = jql & " status changed to closed during (""" & from_ & """, """ & to_ & """)"
+' jql = jql & " and issuekey = 'OM-19434' "
+jql = jql & " AND ""End date"" >= 2018-01-01 "
+' jql = jql & " AND cf[20162] >= ""2018/01/01"" "
 
 'jql = jql & " OR status changed to closed during (""" & from_ & """"", """ & to_ & """)"
 'jql = jql & " OR status changed to planned during (""" & from_ & """"", """ & to_ & """)"
 ' jql = jql & " )"
 
-'response.write jql
+' response.write jql
 'response.end
-
 'for testing
 'jql = " issuekey = ""OM-27842"" "
 
 xml = getJiraItems(jql)
-'response.write xml
-'response.end
+' response.write xml
 
 'response.write replace(xml, "<", "[")
 'response.write jql
@@ -239,8 +219,7 @@ xml = getJiraItems(jql)
 			end if
 
 		Next
-		'if bln = true then
-		if true then
+		if bln = true then
 		xml = xml & "<item>" & vbcrlf
 		For Each field_in_item_ In item_.ChildNodes
 			xml = xml & "<" & field_in_item_.BaseName & ">" & xmlsafe("" & field_in_item_.Text) & "</" & field_in_item_.BaseName & ">" & vbcrlf
@@ -257,22 +236,39 @@ xml = getJiraItems(jql)
 	'ok now we have a good set of xml to go with
 	i = 0
 	j = 0
-	response.write "<span style='font-family:verdana;font-size:10pt;'><b>Adherence to 4-10 deadlines - Actions</b></span><br>"
+	response.write "<span style='font-family:verdana;font-size:10pt;'><b>Baseline Enddate shifts</b></span><br>"
 	response.write "<span style='font-family:verdana;font-size:8pt;'>"
-	response.write "All issues in project SOIM and of type Source Incident, MoMa Incident, KPI or Audit which are created between " & from_ & " and " & to_ & "<br>"
+	response.write "All issues of type (Activity - Archive Validation,  Activity - Feasibility,  Activity - Manual Production,  Activity - Other,  Activity - Quality Analysis,  Activity - SQR Measurement,  Activity - Source Acquisition,  Activity - Source Acquisition - Field,  Activity - Source Analysis,  Activity - Source Preparation)<br>"
+	response.write "and Assigned Unit of (SO MOMA, SO SSO, SO APA, SO AME, SO PMO, SO GDT, SO EAP, SO SAMEA, SO ECA, SO EECA, SO AFR,  SO WCE,  SO STS,  SO SAM,  SO PDV,  SO OCE,  SO NEA,  SO NAM,  SO LAM)<br>"
+	response.write "and closed in month XX. Review for Declined Resolution.<br>"
 	response.write "</span>"
 
 	response.write "<table style='font-family:verdana;font-size:8pt;border-collapse:collapse;' border='1' id='table'>"
 	response.write "<tr>"
-	response.write "<td>" & "Pkey" & "-" & "issuenum" & "</td>"
-	response.write "<td>" & "Issuetype" & "</td>"
-	response.write "<td>" & "Summary" & "</td>"
-	response.write "<td>" & "Assignee"   & "</td>"
-	response.write "<td>" & "Created on"   & "</td>"
-	response.write "<td>" & "Parent Action id" & "</td>"
-	response.write "<td>" & "Parent Action issuetype" & "</td>"
-	response.write "<td>" & "Parent Action created" & "</td>"
-	response.write "<td>" & "Action created late?" & "</td>"
+	response.write "<td>" & "pkey" & "-" & "issuenum" & "</td>"
+	response.write "<td>" & "issuetype" & "</td>"
+	' response.write "<td>" & "component" & "</td>"
+	response.write "<td>" & "summary" & "</td>"
+	response.write "<td>" & "state"   & "</td>"
+	response.write "<td>" & "assigned unit"   & "</td>"
+	response.write "<td>" & "requesting unit"   & "</td>"
+	response.write "<td>" & "created"   & "</td>"
+	response.write "<td>" & "updated"   & "</td>"
+	response.write "<td>" & "resolution"   & "</td>"
+	response.write "<td>" & "resolutiondate"   & "</td>"
+	response.write "<td>" & "state change overview"   & "</td>"
+	response.write "<td>" & "date set to closed"   & "</td>"
+	response.write "<td>" & "enddate"   & "</td>"
+
+	response.write "<td>" & "baseline enddate shifts" & "</td>"
+	response.write "<td>" & "initial date" & "</td>"
+	response.write "<td>" & "latest date" & "</td>"
+	response.write "<td>" & "nr changed" & "</td>"
+	response.write "<td>" & "nr days between" & "</td>"
+
+	' response.write "<td>" & "item duedate"   & "</td>"
+	' response.write "<td>" & "item target duedate"   & "</td>"
+	' response.write "<td>" & "duedate via linked sprint(s)"   & "</td>"
 	response.write "</tr>"
 	Set nodelist = objXML.getElementsByTagName("item_result/*")
 	For Each item_ In nodelist
@@ -280,72 +276,45 @@ xml = getJiraItems(jql)
 		'8APR2020 - quickfix if itemid = OM-65464 then skip
 		'14APR2020 : not needed anymore : if getFieldValue(item_,"key") = "OM-65464" then bln = false
 		if bln = true then
-			'if (getFieldValue(item_,"resolution")) = "Declined"  then
-			'	j = j + 1
-			'	response.write "<tr style='background-color:red'>"
-			'else
+			if (getFieldValue(item_,"resolution")) = "Declined"  then
+				j = j + 1
+				response.write "<tr style='background-color:red'>"
+			else
 				response.write "<tr>"
-			'end if
+			end if
 			response.write "<td>" & getFieldValue(item_,"key") & "</td>"
 			response.write "<td>" & getFieldValue(item_,"issuetype") & "</td>"
+			' response.write "<td>" & getFieldValue(item_,"components") & "</td>"
 			response.write "<td>" & getFieldValue(item_,"summary") & "</td>"
-			response.write "<td>" & getFieldValue(item_,"assignee") & "</td>"
-			created = getFieldValue(item_,"created")
-			response.write "<td>" & toDD_MM_YYYY(created) & "</td>"
+			response.write "<td>" & getFieldValue(item_,"status") & "</td>"
+			response.write "<td>" & getFieldValue(item_,"assigned_unit") & "</td>"
+			response.write "<td>" & getFieldValue(item_,"requesting_unit") & "</td>"
+			'response.write "<td>" & getFieldValue(item_,"components") & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"created")) & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"updated")) & "</td>"
+			response.write "<td>" & getFieldValue(item_,"resolution") & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"resolutiondate")) & "</td>"
+			response.write "<td>" & replace(getFieldValue(item_,"transitions_history"), "@@", "<br>") & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(getSettoClosed(getFieldValue(item_,"transitions_history"))) & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"enddate")) & "</td>"
 
-			'for each of the subtasks get the information
-			parent = getFieldValue(item_,"parent")
-			processed_parents = processed_parents & parent & "||"
+			tmp = getFieldValue(item_,"bl_enddate_history")
+			response.write "<td>" & replace(tmp, "@@", "<br>") & "</td>"
 
-			tmp = ""
-			arr = split(parent, "||")
-			for a = lbound(arr) to ubound(arr)
-			if arr(a) <> "" then
-				jql = "issuekey=""" & arr(a) & """"
-				xml2 = getJiraItems(jql)
-				objXML2.loadXML xml2
-				Set nodelist2 = objXML2.getElementsByTagName("item_result/*")
-				For Each item2_ In nodelist2
-					tmp = tmp & arr(a) & "$$"
-					tmp = tmp & getFieldValue(item2_,"issuetype") & "$$"
-					tmp = tmp & getFieldValue(item2_,"created") & "##"
-				next
-			end if
-			next
-			'response.write "<td>" & tmp & "</td>"
+			response.write "<td>" & showFirst(tmp) & "</td>"
+			response.write "<td>" & showLast(tmp) & "</td>"
+			response.write "<td>" & countChanges(tmp) & "</td>"
+			response.write "<td>" & countDaysbetween(tmp) & "</td>"
 
-			'at this point we extracted all the relevant info to draw conclusions
-			'extract the Parent task
-			arr = split(tmp, "##")
-			tmp = ""
-			tmp2 = ""
-			for a = lbound(arr) to ubound(arr)
-			if arr(a) <> "" then
-				arr2 = split(arr(a), "$$")
-				parent = arr2(0)
-				tmp = arr2(1)
-				parentcreated = arr2(2)
-				'make sure to stop after first parent
-				a = ubound(arr)
-			end if
-			next
+			'response.write "<td>" & "" & "</td>" 'validation tracking to in validation occurences
+			'response.write "<td>" & "" & "</td>" 'in validation to anything but done/Validation Tracking occurences
+			' response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"duedate")) & "</td>"
+			' response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"target_duedate")) & "</td>"
+			' response.write "<td>" & toDD_MM_YYYY(getFieldValue(item_,"sprintcompletedate")) & "</td>"
 
-			response.write "<td>" & parent & "</td>"
-			response.write "<td>" & tmp & "</td>"
-			response.write "<td>" & toDD_MM_YYYY(parentcreated) & "</td>"
-
- 			'now put conclusion in 'action created late'
-			'if parent creationdate + 10 < action created then its a yes
-			'Kata: changed dateadd from "w", 10 in order to extend the deadline to 14 calendar days
-			dt1 = dateserial(mid(parentcreated,1,4),mid(parentcreated,5,2),mid(parentcreated,7,2))
-			dt1 = dateadd("d", 14, dt1)
-			dt2 = dateserial(mid(created,1,4),mid(created,5,2),mid(created,7,2))
-			if dt1 < dt2 then
-				response.write "<td>" & "yes" & "</td>"
-			else
-				response.write "<td>" & "no" & "</td>"
-			end if
-
+			'For Each field_in_item_ In item_.ChildNodes
+			'response.write "<td>" & field_in_item_.text & "</td>"
+			'next
 			response.write "</tr>"
 			i = i + 1
 		end if
@@ -353,74 +322,13 @@ xml = getJiraItems(jql)
 
 	response.write "</table>"
 	response.write "<a href='#' onclick='downloadCSV(""table"",""output.csv"");'>CSV</a><br>"
-	response.write i & " items<br>" ' were set to Closed in " & yearmonth & " however " & j & " items have Quality Declined<br>"
+	response.write i & " items were set to Closed in " & yearmonth & " however " & j & " items have Quality Declined<br>"
 	response.write "<br>"
 
-'response.write processed_parents
+'end if 'prj loop
+'next 'prj loop
 
-'ALSO show SOIM items who do not have a childtaks
-jql = ""
-jql = jql & " project = ""SOIM"" "
-jql = jql & " AND issuetype in ('Source Incident','MoMa Incident','KPI','Audit') "
-jql = jql & " AND createdDate >= '" & from_ & "' AND createdDate <= '" & to_ & "' "
-
-xml = getJiraItems(jql)
-'response.write (replace(xml, "<" , "["))
-objXML.LoadXML xml
-
-	xml = ""
-	xml = xml & "<item_result>" & vbcrlf
-	'now rebuild the XML using addiotnal filters
-	Set nodelist = objXML.getElementsByTagName("item_result/*")
-	i = 1
-	For Each item_ In nodelist
-
-		bln = true
-		if instr(processed_parents, "||" & getFieldValue(item_,"key") & "||") > 0 then
-			bln = false
-		end if
-
-		if bln = true then
-			xml = xml & "<item>" & vbcrlf
-			For Each field_in_item_ In item_.ChildNodes
-				xml = xml & "<" & field_in_item_.BaseName & ">" & xmlsafe("" & field_in_item_.Text) & "</" & field_in_item_.BaseName & ">" & vbcrlf
-			Next
-			xml = xml & "</item>" & vbcrlf
-		end if
-
-		i = i + 1
-	Next
-	xml = xml & "</item_result>" & vbcrlf
-	objXML.LoadXML xml
-
-	'ok now we have a good set of xml to go with
-	i = 0
-	response.write "Items below do not have an action defined yet<br>"
-	response.write "<table style='font-family:verdana;font-size:8pt;border-collapse:collapse;' border='1' id='table_2'>"
-	response.write "<tr>"
-	response.write "<td>" & "Parent Action id" & "</td>"
-	response.write "<td>" & "Parent Action issuetype" & "</td>"
-	response.write "<td>" & "Parent Action summary" & "</td>"
-	response.write "<td>" & "Parent Action assignee" & "</td>"
-	response.write "<td>" & "Parent Action created" & "</td>"
-	response.write "</tr>"
-	Set nodelist = objXML.getElementsByTagName("item_result/*")
-	For Each item_ In nodelist
-		response.write "<td>" & getFieldValue(item_,"key") & "</td>"
-		response.write "<td>" & getFieldValue(item_,"issuetype") & "</td>"
-		response.write "<td>" & getFieldValue(item_,"summary") & "</td>"
-		response.write "<td>" & getFieldValue(item_,"assignee") & "</td>"
-		created = getFieldValue(item_,"created")
-		response.write "<td>" & toDD_MM_YYYY(created) & "</td>"
-		response.write "</tr>"
-		i = i + 1
-	next
-
-	response.write "</table>"
-	response.write "<a href='#' onclick='downloadCSV(""table_2"",""output.csv"");'>CSV</a><br>"
-	response.write i & " items<br>" ' were set to Closed in " & yearmonth & " however " & j & " items have Quality Declined<br>"
-	response.write "<br>"
-
+'response.write tmp
 %>
 </body>
 </html>
@@ -554,24 +462,6 @@ Function URLEncode(ByVal str)
  URLEncode = strTemp
 End Function
 
-function getMostRecentDecision(all)
-getMostRecentDecision = "99999999"
-dim arr
-dim arr2
-dim a
-
-arr = split(all, "@@")
-for a = lbound(arr) to ubound(arr)
-if arr(a) <> "" then
-	arr2 = split(arr(a), "||")
-	if arr2(0) < getMostRecentDecision then
-		getMostRecentDecision = arr2(0)
-	end if
-end if
-next
-if getMostRecentDecision = "99999999" then getMostRecentDecision = ""
-end function
-
 function getSettoClosed(allstates)
 getSettoClosed = "00000000"
 dim arr
@@ -620,13 +510,12 @@ xmlsafe = replace(xmlsafe, chr(11), "")
 end function
 
 Function getJiraItems(jql)
+' response.write "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
 randomize timer
 'On Error Resume Next
 Dim xmlhttp
-dim url
-url = "http://127.0.0.1/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
 Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
-xmlhttp.Open "GET", url, False
+xmlhttp.Open "GET", "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & "", False
 xmlhttp.send
 getJiraItems = xmlhttp.responseText
 Set xmlhttp = Nothing
@@ -657,6 +546,7 @@ if arr(a) <> "" then
 end if
 next
 end function
+
 
 function toDD_MM_YYYY(s)
 toDD_MM_YYYY = s

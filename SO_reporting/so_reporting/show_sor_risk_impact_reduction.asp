@@ -688,7 +688,7 @@ randomize timer
 'On Error Resume Next
 Dim xmlhttp
 dim url
-url = "http://127.0.0.1/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
+url = "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
 Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
 xmlhttp.Open "GET", url, False
 xmlhttp.send

@@ -18,21 +18,22 @@
 
 <script language=vb runat=server>
 Private Sub Page_Load(ByVal sender As System.Object, ByVal e As System.EventArgs)
-System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12
 
 Dim webClient As New System.Net.WebClient
 'webClient.Headers.Add("Content-Type", "application/x-www-form-urlencoded")
-webClient.Headers.Add("Content-Type", "application/json; charset=utf-8")
-'webClient.Headers.Add("Authorization", "Basic " & "c3ZjX3N0c19qaXJhX3VzZXI6RjIzcnQjNDV0eSM0")
-webClient.Headers.Add("Authorization", "Bearer " & "NjEwNTg3NTc5NjU0Ot6RDMksA3OJYGutuCZaMVZs6e1i")
+webClient.Headers.Add("Content-Type", "application/json")
+webClient.Headers.Add("Authorization", "Basic " & "dmFuYWNrZXQ6Z2FsYXVyZTAxLg==")
+webClient.Headers.Add("X-Atlassian-Token", "nocheck")
+
 Dim result As String 
-'result = webClient.DownloadString("http://127.0.0.1/getsuppipeitem.asp?id=1")
+'result = webClient.DownloadString("http://nlsrvwp-pcd02.net-10-67-0-0.tt3.com/getsuppipeitem.asp?id=1")
 Dim url As String
 dim prj as string
 
 dim jql as String
 jql = request.querystring("jql")
-if jql = "" then jql = " issuekey=""OM-974"" "
+'if jql = "" then jql = "project=""STS"""
+if jql = "" then jql = "issuekey=""STS-714"""
 
 '	jql = ""
 '	jql = jql & " project = ""STS"" "
@@ -46,7 +47,7 @@ if jql = "" then jql = " issuekey=""OM-974"" "
 
 'url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & prj & """ and component=""RSO Global Alignment""&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
 'url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & prj & """&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
-url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=" & jql & "&fields=summary,issuetype,status,created,updated,duedate,resolution,resolutiondate,customfield_20162,customfield_20164,customfield_20268,customfield_20363,customfield_11860,fixVersions,components,customfield_19662&maxResults=-1"
+url = "https://jira.tomtomgroup.com/rest/api/2/search?jql=" & Server.UrlEncode(jql) & "&fields=summary,issuetype,status,created,updated,duedate,resolutiondate,customfield_11860,fixVersions,components,customfield_19662,labels&maxResults=-1"
 'response.write (url)
 
 result = webClient.DownloadString(url)
@@ -59,7 +60,6 @@ dim a
 'responsE.end
 
 Dim MySerializer As JavaScriptSerializer = New JavaScriptSerializer()
-MySerializer.MaxJsonLength = 86753090
 Dim parentJson As Dictionary(Of String, Object) = MySerializer.Deserialize(Of Dictionary(Of String, Object))(result)
 'Dim issuesJson As Dictionary(Of String, Object) 
 
@@ -120,22 +120,6 @@ For Each pair In parentJson
 					end if
 					end if
 
-					if (field.key.tostring = "customfield_20164") then
-					if (field.value is nothing) then
-						xml = xml & "<bl_enddate>" & "" & "</bl_enddate>" & vbcrlf
-					else
-						xml = xml & "<bl_enddate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</bl_enddate>" & vbcrlf
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20162") then
-					if (field.value is nothing) then
-						xml = xml & "<enddate>" & "" & "</enddate>" & vbcrlf
-					else
-						xml = xml & "<enddate>" & xmlsafe(toYYYYMMDD("" & field.value.tostring)) & "</enddate>" & vbcrlf
-					end if
-					end if
-
 					if (field.key.tostring = "status") then
 					if (field.value is nothing) then
 						xml = xml & "<status>" & "" & "</status>" & vbcrlf
@@ -144,45 +128,6 @@ For Each pair In parentJson
 						for each field_in_status in field.value
 						if (field_in_status.key.tostring = "name") then
 							xml = xml & "<status>" & xmlsafe("" & field_in_status.value.tostring) & "</status>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
-					if (field.key.tostring = "resolution") then
-					if (field.value is nothing) then
-						xml = xml & "<resolution>" & "" & "</resolution>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "name") then
-							xml = xml & "<resolution>" & xmlsafe("" & field_in_status.value.tostring) & "</resolution>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20363") then
-					if (field.value is nothing) then
-						xml = xml & "<assigned_unit>" & "" & "</assigned_unit>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "value") then
-							xml = xml & "<assigned_unit>" & xmlsafe("" & field_in_status.value.tostring) & "</assigned_unit>" & vbcrlf
-						end if
-						next
-					end if
-					end if
-
-					if (field.key.tostring = "customfield_20268") then
-					if (field.value is nothing) then
-						xml = xml & "<requesting_unit>" & "" & "</requesting_unit>" & vbcrlf
-					else
-						'xml = xml & "<issuetype>" & xmlsafe("" & field.value.tostring) & "</issuetype>" & vbcrlf
-						for each field_in_status in field.value
-						if (field_in_status.key.tostring = "value") then
-							xml = xml & "<requesting_unit>" & xmlsafe("" & field_in_status.value.tostring) & "</requesting_unit>" & vbcrlf
 						end if
 						next
 					end if
@@ -214,7 +159,7 @@ For Each pair In parentJson
 
 					if (field.key.tostring = "components") then
 					if (field.value is nothing) then
-						xml = xml & "<resolutiondate>" & "" & "</resolutiondate>" & vbcrlf
+						xml = xml & "<components>" & "" & "</components>" & vbcrlf
 					else
 						tmp = "||"
 						for each comp_item in field.value
@@ -228,6 +173,23 @@ For Each pair In parentJson
 						xml = xml & "<components>" & xmlsafe(tmp) & "</components>" & vbcrlf
 					end if
 					end if
+
+					if (field.key.tostring = "labels") then
+					if (field.value is nothing) then
+						xml = xml & "<labels>" & "" & "</labels>" & vbcrlf
+					else
+						tmp = "||"
+						for each label_item in field.value
+						'for each field_in_label_item in label_item
+						'if (field_in_label_item.key.tostring = "name") then
+							tmp = tmp & trim(label_item) & "||"
+						'end if
+						'next
+						next
+						if tmp = "||" then tmp = ""
+						xml = xml & "<labels>" & xmlsafe(tmp) & "</labels>" & vbcrlf
+					end if
+					end if
 					
 					'sprintinfo - customfield_11860
 					'sprintenddate - take latest completeddate - customfield_11860
@@ -235,18 +197,21 @@ For Each pair In parentJson
 					if (field.value is nothing) then
 						xml = xml & "<sprintinfo>" & "" & "</sprintinfo>" & vbcrlf
 						xml = xml & "<sprintcompletedate>" & "" & "</sprintcompletedate>" & vbcrlf
+
 					else
 						tmp = "||"
 						for each sprintinfo_item in field.value
 						'for each field_in_sprintinfo_item in sprintinfo_item
-						'if (field_in_comp_item.key.tostring = "name") then
+						'if (field_in_sprintinfo_item.key.tostring = "name") then
 							tmp = tmp & trim(sprintinfo_item) & "||"
 						'end if
 						'next
 						next
 						if tmp = "||" then tmp = ""
 						xml = xml & "<sprintinfo>" & xmlsafe(tmp) & "</sprintinfo>" & vbcrlf
-						xml = xml & "<sprintcompletedate>" & xmlsafe(getSprintLatestCompletedDate(tmp)) & "</sprintcompletedate>" & vbcrlf
+						xml = xml & "<sprintcompletedate>" & xmlsafe("" & getSprintLatestCompletedDate(tmp)) & "</sprintcompletedate>" & vbcrlf
+						'xml = xml & "<sprintcompletedate>" & xmlsafe(toYYYYMMDD("" & getSprintLatestCompletedDate(tmp))) & "</sprintcompletedate>" & vbcrlf
+						'xml = xml & "<sprintcompletedate>" & xmlsafe(tmp) & "</sprintcompletedate>" & vbcrlf
 					end if
 					end if
 				next 'loop through all the fields
@@ -284,7 +249,7 @@ Next
 
 xml = xml & "</item_result>" & vbcrlf
 
-'Server.ScriptTimeout = 60*60
+Server.ScriptTimeout = 60*60
 Response.ContentType = "text/xml"
 Response.CharSet = "UTF-8"
 response.write (xml)
@@ -339,14 +304,13 @@ Dim webClient As New System.Net.WebClient
 Dim result As String 
 
 url = "https://jira.tomtomgroup.com/rest/api/2/issue/" & jira_key & "?expand=changelog"
-webClient.Headers.Add("Content-Type", "application/json; charset=utf-8")
-'webClient.Headers.Add("Authorization", "Basic " & "c3ZjX3N0c19qaXJhX3VzZXI6RjIzcnQjNDV0eSM0")
-webClient.Headers.Add("Authorization", "Bearer " & "NjEwNTg3NTc5NjU0Ot6RDMksA3OJYGutuCZaMVZs6e1i")
+webClient.Headers.Add("Content-Type", "application/json")
+webClient.Headers.Add("Authorization", "Basic " & "dmFuYWNrZXQ6Z2FsYXVyZTAxLg==")
+webClient.Headers.Add("X-Atlassian-Token", "nocheck")
 result = webClient.DownloadString(url)
 
 parseHist_ = ""
 Dim MySerializer As JavaScriptSerializer = New JavaScriptSerializer()
-MySerializer.MaxJsonLength = 86753090
 Dim parentJson As Dictionary(Of String, Object) = MySerializer.Deserialize(Of Dictionary(Of String, Object))(result)
 dim bln as boolean
 dim created as string

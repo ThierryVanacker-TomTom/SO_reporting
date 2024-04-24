@@ -94,7 +94,11 @@ dim settodone
 dim created
 dim decision_created_on
 dim subtasks
-dim rcactiondone
+dim parent
+dim parentcreated
+dim processed_parents
+processed_parents = "||"
+
 dim dt1
 dim dt2
 
@@ -108,7 +112,7 @@ dim to_
 yearmonth = request.querystring("yearmonth")
 if (yearmonth = "") then yearmonth = right("0000" & year(date),4) & right("00" & Month(date),2)
 
-'Kata: dateadd changed from "w", -4 to extend the deadline to 14 calendar days
+'kata: changed dateadd from "w", -10 to extend the deadline to 14 calendar days
 tmp = dateserial(mid(yearmonth,1,4), mid(yearmonth,5,2), 1)
 'format into 2018/06/30
 dt = dateadd("d", -14, tmp)
@@ -120,11 +124,14 @@ to_ = right("0000" & year(dt),4) & "/" & right("00" & month(dt),2) & "/" & right
 dim jql
 jql = ""
 jql = jql & " project = ""SOIM"" "
-jql = jql & " AND issuetype in (""Source Incident"",""MoMa Incident"",""KPI"",""Audit"", ""Service"",""Tool"",""Program"",""Process"")"
-jql = jql & " AND createdDate >= """ & from_ & """ "
-jql = jql & " AND createdDate <= """ & to_ & """ "
+jql = jql & " and issuetype in (""Prevent Recurrence"",""Corrective action"") " ',""Fix""
+jql = jql & " and issueFunction in subtasksOf("" "
+jql = jql & " project = 'SOIM' "
+'14JUN2022 - added 4 new issuetypes : Service"",""Tool"",""Program"",""Process
+jql = jql & " AND issuetype in ('Source Incident','MoMa Incident','KPI','Audit', 'Service','Tool','Program','Process') "
+jql = jql & " AND createdDate >= '" & from_ & "' AND createdDate <= '" & to_ & "' "") "
 
-'jql = jql & " AND ""Assigned Unit"" in (""SO MOMA"",""SO SSO"",""SO APA"",""SO AME"",""SO PMO"",""SO GDT"",""SO EAP"", ""SO ECA"", ""SO SAMEA"",""SO EECA"", ""SO AFR"", ""SO WCE"", ""SO STS"", ""SO SAM"", ""SO PDV"", ""SO OCE"", ""SO NEA"", ""SO NAM"", ""SO LAM"")"
+'jql = jql & " AND ""Assigned Unit"" in (""SO MOMA"",""SO SSO"",""SO APA"",""SO AME"",""SO PMO"",""SO GDT"",""SO EAP"", ""SO ECA"", ""SO SAMEA"", ""SO EECA"", ""SO AFR"", ""SO WCE"", ""SO STS"", ""SO SAM"", ""SO PDV"", ""SO OCE"", ""SO NEA"", ""SO NAM"", ""SO LAM"")"
 'jql = jql & " AND "
 'jql = jql & " status changed to closed during (""" & from_ & """, """ & to_ & """)"
 '' jql = jql & " and issuekey = 'OM-19434' "
@@ -250,7 +257,7 @@ xml = getJiraItems(jql)
 	'ok now we have a good set of xml to go with
 	i = 0
 	j = 0
-	response.write "<span style='font-family:verdana;font-size:10pt;'><b>Adherence to 4-10 deadlines - Root Cause</b></span><br>"
+	response.write "<span style='font-family:verdana;font-size:10pt;'><b>Adherence to 4-10 deadlines - Actions</b></span><br>"
 	response.write "<span style='font-family:verdana;font-size:8pt;'>"
 	response.write "All issues in project SOIM and of type Source Incident, MoMa Incident, KPI or Audit which are created between " & from_ & " and " & to_ & "<br>"
 	response.write "</span>"
@@ -262,9 +269,10 @@ xml = getJiraItems(jql)
 	response.write "<td>" & "Summary" & "</td>"
 	response.write "<td>" & "Assignee"   & "</td>"
 	response.write "<td>" & "Created on"   & "</td>"
-	response.write "<td>" & "Root Cause Action id" & "</td>"
-	response.write "<td>" & "Root Cause Action date done" & "</td>"
-	response.write "<td>" & "Root Cause late?" & "</td>"
+	response.write "<td>" & "Parent Action id" & "</td>"
+	response.write "<td>" & "Parent Action issuetype" & "</td>"
+	response.write "<td>" & "Parent Action created" & "</td>"
+	response.write "<td>" & "Action created late?" & "</td>"
 	response.write "</tr>"
 	Set nodelist = objXML.getElementsByTagName("item_result/*")
 	For Each item_ In nodelist
@@ -286,9 +294,11 @@ xml = getJiraItems(jql)
 			response.write "<td>" & toDD_MM_YYYY(created) & "</td>"
 
 			'for each of the subtasks get the information
-			subtasks = getFieldValue(item_,"subtasks")
+			parent = getFieldValue(item_,"parent")
+			processed_parents = processed_parents & parent & "||"
+
 			tmp = ""
-			arr = split(subtasks, "||")
+			arr = split(parent, "||")
 			for a = lbound(arr) to ubound(arr)
 			if arr(a) <> "" then
 				jql = "issuekey=""" & arr(a) & """"
@@ -298,54 +308,42 @@ xml = getJiraItems(jql)
 				For Each item2_ In nodelist2
 					tmp = tmp & arr(a) & "$$"
 					tmp = tmp & getFieldValue(item2_,"issuetype") & "$$"
-					tmp = tmp & getFieldValue(item2_,"transitions_history") & "##"
+					tmp = tmp & getFieldValue(item2_,"created") & "##"
 				next
 			end if
 			next
 			'response.write "<td>" & tmp & "</td>"
 
 			'at this point we extracted all the relevant info to draw conclusions
-			'extract the Analysis task
+			'extract the Parent task
 			arr = split(tmp, "##")
 			tmp = ""
 			tmp2 = ""
 			for a = lbound(arr) to ubound(arr)
 			if arr(a) <> "" then
 				arr2 = split(arr(a), "$$")
-				'14JUN2022 - added second issuetype check = SO Root Cause Analysis
-				if arr2(1) = "Analyses" or arr2(1) = "SO Root Cause Analysis" then
-					tmp = arr2(0) 'jira key of subtask
-					'we have an analysis task, when was it done?
-					rcactiondone = getDonefromSOIMsubtask(arr2(2))
-					'stop after first
-					a = ubound(arr)
-				end if
+				parent = arr2(0)
+				tmp = arr2(1)
+				parentcreated = arr2(2)
+				'make sure to stop after first parent
+				a = ubound(arr)
 			end if
 			next
 
+			response.write "<td>" & parent & "</td>"
 			response.write "<td>" & tmp & "</td>"
-			response.write "<td>" & toDD_MM_YYYY(rcactiondone) & "</td>"
+			response.write "<td>" & toDD_MM_YYYY(parentcreated) & "</td>"
 
- 			'now put conclusion in 'root cause late'
-			'if no RC then off course it a yes
-			if tmp = "" then
+ 			'now put conclusion in 'action created late'
+			'if parent creationdate + 10 < action created then its a yes
+			'Kata: changed dateadd from "w", 10 in order to extend the deadline to 14 calendar days
+			dt1 = dateserial(mid(parentcreated,1,4),mid(parentcreated,5,2),mid(parentcreated,7,2))
+			dt1 = dateadd("d", 14, dt1)
+			dt2 = dateserial(mid(created,1,4),mid(created,5,2),mid(created,7,2))
+			if dt1 < dt2 then
 				response.write "<td>" & "yes" & "</td>"
 			else
-				'if rc is not done then its a yes
-				if rcactiondone = "" then
-					response.write "<td>" & "yes" & "</td>"
-				else
-					'if soim creationdate + 4 < rcdone then its a yes
-					'Kata: dateadd changed from "w", 4 in order to extend the deadline to 14 calendar days
-					dt1 = dateserial(mid(created,1,4),mid(created,5,2),mid(created,7,2))
-					dt1 = dateadd("d", 14, dt1)
-					dt2 = dateserial(mid(rcactiondone,1,4),mid(rcactiondone,5,2),mid(rcactiondone,7,2))
-					if dt1 < dt2 then
-						response.write "<td>" & "yes" & "</td>"
-					else
-						response.write "<td>" & "no" & "</td>"
-					end if
-				end if
+				response.write "<td>" & "no" & "</td>"
 			end if
 
 			response.write "</tr>"
@@ -357,6 +355,72 @@ xml = getJiraItems(jql)
 	response.write "<a href='#' onclick='downloadCSV(""table"",""output.csv"");'>CSV</a><br>"
 	response.write i & " items<br>" ' were set to Closed in " & yearmonth & " however " & j & " items have Quality Declined<br>"
 	response.write "<br>"
+
+'response.write processed_parents
+
+'ALSO show SOIM items who do not have a childtaks
+jql = ""
+jql = jql & " project = ""SOIM"" "
+jql = jql & " AND issuetype in ('Source Incident','MoMa Incident','KPI','Audit') "
+jql = jql & " AND createdDate >= '" & from_ & "' AND createdDate <= '" & to_ & "' "
+
+xml = getJiraItems(jql)
+'response.write (replace(xml, "<" , "["))
+objXML.LoadXML xml
+
+	xml = ""
+	xml = xml & "<item_result>" & vbcrlf
+	'now rebuild the XML using addiotnal filters
+	Set nodelist = objXML.getElementsByTagName("item_result/*")
+	i = 1
+	For Each item_ In nodelist
+
+		bln = true
+		if instr(processed_parents, "||" & getFieldValue(item_,"key") & "||") > 0 then
+			bln = false
+		end if
+
+		if bln = true then
+			xml = xml & "<item>" & vbcrlf
+			For Each field_in_item_ In item_.ChildNodes
+				xml = xml & "<" & field_in_item_.BaseName & ">" & xmlsafe("" & field_in_item_.Text) & "</" & field_in_item_.BaseName & ">" & vbcrlf
+			Next
+			xml = xml & "</item>" & vbcrlf
+		end if
+
+		i = i + 1
+	Next
+	xml = xml & "</item_result>" & vbcrlf
+	objXML.LoadXML xml
+
+	'ok now we have a good set of xml to go with
+	i = 0
+	response.write "Items below do not have an action defined yet<br>"
+	response.write "<table style='font-family:verdana;font-size:8pt;border-collapse:collapse;' border='1' id='table_2'>"
+	response.write "<tr>"
+	response.write "<td>" & "Parent Action id" & "</td>"
+	response.write "<td>" & "Parent Action issuetype" & "</td>"
+	response.write "<td>" & "Parent Action summary" & "</td>"
+	response.write "<td>" & "Parent Action assignee" & "</td>"
+	response.write "<td>" & "Parent Action created" & "</td>"
+	response.write "</tr>"
+	Set nodelist = objXML.getElementsByTagName("item_result/*")
+	For Each item_ In nodelist
+		response.write "<td>" & getFieldValue(item_,"key") & "</td>"
+		response.write "<td>" & getFieldValue(item_,"issuetype") & "</td>"
+		response.write "<td>" & getFieldValue(item_,"summary") & "</td>"
+		response.write "<td>" & getFieldValue(item_,"assignee") & "</td>"
+		created = getFieldValue(item_,"created")
+		response.write "<td>" & toDD_MM_YYYY(created) & "</td>"
+		response.write "</tr>"
+		i = i + 1
+	next
+
+	response.write "</table>"
+	response.write "<a href='#' onclick='downloadCSV(""table_2"",""output.csv"");'>CSV</a><br>"
+	response.write i & " items<br>" ' were set to Closed in " & yearmonth & " however " & j & " items have Quality Declined<br>"
+	response.write "<br>"
+
 %>
 </body>
 </html>
@@ -560,7 +624,7 @@ randomize timer
 'On Error Resume Next
 Dim xmlhttp
 dim url
-url = "http://127.0.0.1/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
+url = "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
 Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
 xmlhttp.Open "GET", url, False
 xmlhttp.send
@@ -600,22 +664,5 @@ if toDD_MM_YYYY = "" then exit function
 '20180526 comes in
 '26/05/2018 goes out
 toDD_MM_YYYY = mid(s, 7, 2) & "/" & mid(s, 5, 2) &"/" & mid(s, 1, 4)
-end function
-
-function getDonefromSOIMsubtask(all)
-getDonefromSOIMsubtask=""
-'sample input = 20201124||Open||In Progress@@20201124||In Progress||Validation@@20201124||Validation||Done@@
-dim arr
-dim arr2
-dim a
-arr = split(all, "@@")
-for a = lbound(arr) to ubound(arr)
-if arr(a) <> "" then
-	arr2 = split(arr(a), "||")
-	if arr2(2) = "Done" then
-		getDonefromSOIMsubtask = (arr2(0))
-	end if
-end if
-next
 end function
 %>

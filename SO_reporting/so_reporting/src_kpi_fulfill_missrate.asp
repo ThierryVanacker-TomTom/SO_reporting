@@ -442,12 +442,12 @@ xmlsafe = replace(xmlsafe, chr(11), "")
 end function
 
 Function getJiraItems(jql)
-' response.write "http://127.0.0.1/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
+' response.write "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & ""
 randomize timer
 'On Error Resume Next
 Dim xmlhttp
 Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
-xmlhttp.Open "GET", "http://127.0.0.1/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & "", False
+xmlhttp.Open "GET", "https://soreporting.azurewebsites.net/so_reporting/getJiraitems.aspx?jql=" & jql & "&rnd=" & rnd & "", False
 xmlhttp.send
 getJiraItems = xmlhttp.responseText
 Set xmlhttp = Nothing

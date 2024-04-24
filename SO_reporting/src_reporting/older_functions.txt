@@ -1,0 +1,725 @@
+function toYYYYMMDD(s)
+toYYYYMMDD = s
+if toYYYYMMDD <> "" then
+	toYYYYMMDD = mid(s,1,4) & mid(s,6,2) & mid(s,9,2)
+end if
+end function
+
+Function Lng2Dt(n)
+if n = "" then
+Lng2Dt = ""
+else
+n=n/1000
+Lng2Dt = dateserial(1900,1,1) + (n + 2 ^ 31) / 86400
+'Lng2Dt = right("0000" & year(lng2dt),4) & right("00" & month(lng2dt),2) & right("00" & day(lng2dt),2) & right("00" & hour(lng2dt),2) & right("00" & minute(lng2dt),2) & right("00" & second(lng2dt),2)
+end if
+End Function
+
+function toDate(s)
+'toDate = timeserial(mid(s,1,4),mid(s,5,2),mid(s,7,2),mid(s,9,2),mid(s,11,2),mid(s,13,2))
+toDate = dateserial(mid(s,1,4),mid(s,5,2),mid(s,7,2))
+end function
+
+Function URLEncode(ByVal str)
+ Dim strTemp, strChar
+ Dim intPos, intASCII
+ strTemp = ""
+ strChar = ""
+ For intPos = 1 To Len(str)
+  intASCII = Asc(Mid(str, intPos, 1))
+  If intASCII = 32 Then
+   strTemp = strTemp & "+"
+  ElseIf ((intASCII < 123) And (intASCII > 96)) Then
+   strTemp = strTemp & Chr(intASCII)
+  ElseIf ((intASCII < 91) And (intASCII > 64)) Then
+   strTemp = strTemp & Chr(intASCII)
+  ElseIf ((intASCII < 58) And (intASCII > 47)) Then
+   strTemp = strTemp & Chr(intASCII)
+  Else
+   strChar = Trim(Hex(intASCII))
+   If intASCII < 16 Then
+    strTemp = strTemp & "%0" & strChar
+   Else
+    strTemp = strTemp & "%" & strChar
+   End If
+  End If
+ Next
+ URLEncode = strTemp
+End Function
+
+function getCustomFieldValue(id, prj, fld, cn)
+getCustomFieldValue = ""
+'todo depeding on the type we need to select the correct column in the customfieldvalue table (stringvalue, numbervalue, textvalue, datevalue
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+strsql = ""
+strsql = strsql & " select cfo.customvalue "
+strsql = strsql & " from jiraissue i, project p, customfield cf, customfieldoption cfo, customfieldvalue cfv "
+strsql = strsql & " where i.issuenum = " & id & " "
+strsql = strsql & " and i.project = p.id "
+strsql = strsql & " and p.pkey = '" & prj & "' "
+strsql = strsql & " and cf.cfname = '" & fld & "' "
+strsql = strsql & " and cf.id = cfv.customfield "
+strsql = strsql & " and cfv.issue = i.id "
+strsql = strsql & " and cfv.stringvalue = cfo.id"
+strsql = strsql & " and cfo.customfield = cf.id "
+strsql = strsql & " "
+strsql = strsql & " "
+strsql = strsql & " "
+strsql = strsql & " "
+
+objrec.open strsql, cn, 1, 3
+if not objrec.eof then
+	getCustomFieldValue = "" & objrec("customvalue")
+end if
+objrec.close
+
+set objrec = nothing
+end function
+
+function getAllLinks(id, prj, cn)
+'function receives eg IM-2 and returns IM-3 Countainmet, IM-4 Correction
+getAllLinks = ""
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+strsql = ""
+strsql = strsql & " select p2.pkey, i2.issuenum, it2.pname, ilt.linkname "
+strsql = strsql & " from jiraissue i, project p, issuelink il, issuelinktype ilt, jiraissue i2, project p2, issuetype it2 "
+strsql = strsql & " where i.issuenum = " & id & ""
+strsql = strsql & " and i.project = p.id "
+strsql = strsql & " and p.pkey = '" & prj & "'"
+strsql = strsql & " and il.source = i.id "
+strsql = strsql & " and il.destination = i2.id "
+strsql = strsql & " and il.linktype = ilt.id "
+strsql = strsql & " and i2.project = p2.id "
+strsql = strsql & " and i2.issuetype = it2.id "
+strsql = strsql & "  "
+strsql = strsql & "  "
+strsql = strsql & "  "
+
+strsql = ""
+strsql = strsql & " select * from issuelink "
+strsql = strsql & " where source = (select i.id from jiraissue i, project p where i.issuenum = " & id & " and i.project = p.id and p.pkey = '" & prj & "') "
+strsql = strsql & " union "
+strsql = strsql & " select * from issuelink "
+strsql = strsql & " where destination = (select i.id from jiraissue i, project p where i.issuenum = " & id & " and i.project = p.id and p.pkey = '" & prj & "') "
+
+objrec.open strsql, cn, 1, 3
+while not objrec.eof
+	getAllLinks = getAllLinks & objrec("pkey") & "-" & objrec("issuenum") & "||" & objrec("pname") & "||" & objrec("linkname") & "@@"
+	objrec.movenext
+wend
+objrec.close
+
+set objrec = nothing
+end function
+
+function getIssueType(id, prj, cn)
+getIssueType = ""
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+	strsql = ""
+	strsql = strsql & " select it.pname "
+	strsql = strsql & " from jiraissue i, project p, issuetype it "
+	strsql = strsql & " where i.issuenum = " & id & ""
+	strsql = strsql & " and i.project = p.id "
+	strsql = strsql & " and p.pkey = '" & prj & "'"
+	strsql = strsql & " and i.issuetype = it.id"
+
+objrec.open strsql, cn, 1, 3
+if not objrec.eof then
+	getIssueType = "" & objrec("pname")
+end if
+objrec.close
+
+set objrec = nothing
+end function
+
+function getEvent(id, prj, cn)
+getEvent = ""
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+	strsql = ""
+	strsql = strsql & " select i.created, i.updated "
+	strsql = strsql & " from jiraissue i, project p "
+	strsql = strsql & " where i.issuenum = " & id & ""
+	strsql = strsql & " and i.project = p.id "
+	strsql = strsql & " and p.pkey = '" & prj & "'"
+
+objrec.open strsql, cn, 1, 3
+if not objrec.eof then
+	if objrec("created") = objrec("updated") then
+		getEvent = "create"
+	else
+		getEvent = "update"
+	end if
+end if
+objrec.close
+
+set objrec = nothing
+end function
+
+function getOldFieldValue(id, prj, fld, cn)
+getOldFieldValue = ""
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+If fld = "description" Then
+fld = "CAST(i.description AS CHAR(10000) CHARACTER SET utf8)"
+Else
+fld = "i." & fld
+End If
+
+	strsql = ""
+	strsql = strsql & " select cg.*, ci.*  "
+	strsql = strsql & " from jiraissue i, project p, changegroup cg , changeitem ci "
+	strsql = strsql & " where i.project = p.id and i.issuenum = " & id & " "
+	strsql = strsql & " and p.pkey = '" & prj & "' "
+	strsql = strsql & " and i.id = cg.issueid "
+	strsql = strsql & " and cg.id = ci.groupid "
+	strsql = strsql & " and field = '" & fld & "' "
+	strsql = strsql & " order by cg.created desc "
+
+'we're intrested in the first row
+'row looks like this: blah blah , oldvalue, oldstring, newvalue, newstring
+
+objrec.open strsql, cn, 1, 3
+if not objrec.eof then
+	getOldFieldValue = objrec("oldstring")
+end if
+objrec.close
+
+set objrec = nothing
+end function
+
+function getFieldValue(id, prj, fld, cn)
+getFieldValue = ""
+dim strsql
+dim objRec
+set objrec = createobject("adodb.recordset")
+
+If fld = "description" Then
+fld = "CAST(i.description AS CHAR(10000) CHARACTER SET utf8)"
+Else
+fld = "i." & fld
+End If
+
+	strsql = ""
+	strsql = strsql & " select " & fld & " "
+	strsql = strsql & " from jiraissue i, project p "
+	strsql = strsql & " where i.issuenum = " & id & ""
+	strsql = strsql & " and i.project = p.id "
+	strsql = strsql & " and p.pkey = '" & prj & "'"
+
+objrec.open strsql, cn, 1, 3
+if not objrec.eof then
+	getFieldValue = objrec(0)
+end if
+objrec.close
+
+set objrec = nothing
+end function
+
+function getfieldValue(xml, fld)
+dim field_in_item_
+For Each field_in_item_ In xml.ChildNodes
+if field_in_item_.basename = fld then
+getfieldValue = field_in_item_.text
+end if
+next
+end function
+
+sub log_(s)
+dim fso
+dim f
+set fso = createobject("scripting.filesystemobject")
+set f = fso.opentextfile(LOGFILE, 8)
+f.writeline now & " - " & s
+f.close
+set f = nothing
+set fso = nothing
+end sub
+
+function getJson(json, key)
+Dim arr
+Dim a
+Dim arr2
+Dim p1
+Dim p2
+'{"id":"1886722","key":"IM-35","self":"https://preprodjira.tomtomgroup.com/rest/api/2/issue/1886722"}
+p1 = InStr(json, """" & key & """:""")
+p2 = InStr(p1, json, """,""")
+If p2 = 0 Then
+    p2 = InStr(p1, json, """}")
+End If
+If p1 <> 0 And p2 <> 0 Then
+    p1 = p1 + Len("""" & key & """:""")
+    getJson = Mid(json, p1, p2 - p1)
+End If
+end function
+
+' Function to decode string from Base64
+Public Function base64_decode(ByVal strIn)
+Dim w1, w2, w3, w4, n, strOut
+For n = 1 To Len(strIn) Step 4
+    w1 = mimedecode(Mid(strIn, n, 1))
+    w2 = mimedecode(Mid(strIn, n + 1, 1))
+    w3 = mimedecode(Mid(strIn, n + 2, 1))
+    w4 = mimedecode(Mid(strIn, n + 3, 1))
+    If w2 >= 0 Then _
+    strOut = strOut + _
+        Chr(((w1 * 4 + Int(w2 / 16)) And 255))
+    If w3 >= 0 Then _
+    strOut = strOut + _
+        Chr(((w2 * 16 + Int(w3 / 4)) And 255))
+    If w4 >= 0 Then _
+    strOut = strOut + _
+        Chr(((w3 * 64 + w4) And 255))
+Next
+base64_decode = strOut
+End Function
+
+Private Function mimedecode(ByVal strIn)
+If Len(strIn) = 0 Then
+    mimedecode = -1: Exit Function
+Else
+    mimedecode = InStr(Base64Chars, strIn) - 1
+End If
+End Function
+
+' Functions for encoding string to Base64
+Public Function base64_encode(ByVal strIn)
+Dim c1, c2, c3, w1, w2, w3, w4, n, strOut
+For n = 1 To Len(strIn) Step 3
+    c1 = Asc(Mid(strIn, n, 1))
+    c2 = Asc(Mid(strIn, n + 1, 1) + Chr(0))
+    c3 = Asc(Mid(strIn, n + 2, 1) + Chr(0))
+    w1 = Int(c1 / 4): w2 = (c1 And 3) * 16 + Int(c2 / 16)
+    If Len(strIn) >= n + 1 Then
+    w3 = (c2 And 15) * 4 + Int(c3 / 64)
+    Else
+    w3 = -1
+    End If
+    If Len(strIn) >= n + 2 Then
+    w4 = c3 And 63
+    Else
+    w4 = -1
+    End If
+    strOut = strOut + mimeencode(w1) + mimeencode(w2) + _
+          mimeencode(w3) + mimeencode(w4)
+Next
+base64_encode = strOut
+End Function
+
+Private Function mimeencode(ByVal intIn)
+Dim Base64Chars
+Base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" & _
+    "abcdefghijklmnopqrstuvwxyz" & _
+    "0123456789" & _
+    "+/"
+If intIn >= 0 Then
+    mimeencode = Mid(Base64Chars, intIn + 1, 1)
+Else
+    mimeencode = ""
+End If
+End Function
+
+Function getJiraItems(project,yearmonth)
+'response.write "http://nlsrvwp-pcd02.net-10-67-0-0.tt3.com/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & ""
+randomize timer
+'On Error Resume Next
+Dim xmlhttp
+Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
+xmlhttp.Open "GET", "http://nlsrvwp-pcd02.net-10-67-0-0.tt3.com/src_reporting/getJiraitems.aspx?project=" & project & "&yearmonth=" & yearmonth & "&rnd=" & rnd & "", False
+xmlhttp.send
+getJiraItems = xmlhttp.responseText
+Set xmlhttp = Nothing
+End Function
+
+Function getSprints(unpw, key)
+'On Error Resume Next
+Dim xmlhttp
+Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/issue/OTS-169561", False
+xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/agile/1.0/issue/" & key & "", False 'or &maxResults=10&startAt=11
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & project & """&maxResults=-1", False 'or &maxResults=10&startAt=11
+xmlhttp.setRequestHeader "Content-Type", "application/json"
+xmlhttp.setRequestHeader "Authorization", "Basic " & unpw
+'If Err.Number <> 0 Then Debug.Print Err.Description
+xmlhttp.send
+'If Err.Number <> 0 Then Debug.Print Err.Description
+getSprints = xmlhttp.responseText
+'response.write getJiraItems
+Set xmlhttp = Nothing
+End Function
+
+Function getTransitions(unpw, key)
+'On Error Resume Next
+Dim xmlhttp
+Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/issue/OTS-169561", False
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/agile/1.0/issue/" & key & "", False 'or &maxResults=10&startAt=11
+xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/issue/" & key & "?expand=changelog&fields=status", False 'or &maxResults=10&startAt=11
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/search?jql=project=""" & project & """&maxResults=-1", False 'or &maxResults=10&startAt=11
+xmlhttp.setRequestHeader "Content-Type", "application/json"
+xmlhttp.setRequestHeader "Authorization", "Basic " & unpw
+'If Err.Number <> 0 Then Debug.Print Err.Description
+xmlhttp.send
+'If Err.Number <> 0 Then Debug.Print Err.Description
+getTransitions = xmlhttp.responseText
+'response.write getJiraItems
+Set xmlhttp = Nothing
+
+'now get the transisitons in a
+dim jsonObj
+dim outputObj
+dim item
+dim item2
+dim createddate
+set jsonObj = new JSONobject
+set outputObj = jsonObj.parse(getTransitions)
+getTransitions = ""
+for each item in outputObj.Value("changelog").Value("histories").items
+	createddate = toYYYYMMDD(item.Value("created"))
+	'now loop within the items field
+	for each item2 in item.Value("items").items
+		if item2.Value("field") = "status" then
+			getTransitions = getTransitions & createddate & "||" & item2.Value("fromString") & "||" & item2.Value("toString") & "@@"
+		end if
+	next
+	'getTransitions = getTransitions & item.Value("id") & "-"
+	'getTransitions = getTransitions & toYYYYMMDD(item.Value("created"))
+	'getTransitions = getTransitions & "<br>"
+next
+set jsonObj = nothing
+set outputObj = nothing
+End Function
+
+Function getJiraItem(unpw, key)
+'On Error Resume Next
+Dim xmlhttp
+Set xmlhttp = CreateObject("MSXML2.XMLHTTP")
+'xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/issue/OTS-169561", False
+xmlhttp.Open "GET", "https://jira.tomtomgroup.com/rest/api/2/issue/" & key, False 'or &maxResults=10&startAt=11
+xmlhttp.setRequestHeader "Content-Type", "application/json"
+xmlhttp.setRequestHeader "Authorization", "Basic " & unpw
+'If Err.Number <> 0 Then Debug.Print Err.Description
+xmlhttp.send
+'If Err.Number <> 0 Then Debug.Print Err.Description
+getJiraItem = xmlhttp.responseText
+Set xmlhttp = Nothing
+End Function
+
+'google for : ; taken from https://stackoverflow.com/questions/1019223/any-good-libraries-for-parsing-json-in-classic-asp
+Function JSONtoXML(jsonText)
+  Dim idx, max, ch, mode, xmldom, xmlelem, xmlchild, name, value
+
+  Set xmldom = CreateObject("Microsoft.XMLDOM")
+  xmldom.loadXML "<xml/>"
+  Set xmlelem = xmldom.documentElement
+
+  max = Len(jsonText)
+  mode = 0
+  name = ""
+  value = ""
+  While idx < max
+    idx = idx + 1
+    ch = Mid(jsonText, idx, 1)
+    Select Case mode
+    Case 0 ' Wait for Tag Root
+      Select Case ch
+      Case "{"
+        mode = 1
+      End Select
+    Case 1 ' Wait for Attribute/Tag Name
+      Select Case ch
+      Case """"
+        name = ""
+        mode = 2
+      Case "{"
+        Set xmlchild = xmldom.createElement("tag")
+        xmlelem.appendChild xmlchild
+        xmlelem.appendchild xmldom.createTextNode(vbCrLf)
+       xmlelem.insertBefore xmldom.createTextNode(vbCrLf), xmlchild
+        Set xmlelem = xmlchild
+      Case "["
+        Set xmlchild = xmldom.createElement("tag")
+        xmlelem.appendChild xmlchild
+        xmlelem.appendchild xmldom.createTextNode(vbCrLf)
+        xmlelem.insertBefore xmldom.createTextNode(vbCrLf), xmlchild
+        Set xmlelem = xmlchild
+      Case "}"
+        Set xmlelem = xmlelem.parentNode
+      Case "]"
+        Set xmlelem = xmlelem.parentNode
+      End Select
+    Case 2 ' Get Attribute/Tag Name
+      Select Case ch
+      Case """"
+        mode = 3
+      Case Else
+        name = name + ch
+      End Select
+    Case 3 ' Wait for colon
+      Select Case ch
+      Case ":"
+        mode = 4
+      End Select
+    Case 4 ' Wait for Attribute value or Tag contents
+      Select Case ch
+      Case "["
+        Set xmlchild = xmldom.createElement(name)
+        xmlelem.appendChild xmlchild
+        xmlelem.appendchild xmldom.createTextNode(vbCrLf)
+        xmlelem.insertBefore xmldom.createTextNode(vbCrLf), xmlchild
+        Set xmlelem = xmlchild
+        name = ""
+        mode = 1
+      Case "{"
+        Set xmlchild = xmldom.createElement(name)
+        xmlelem.appendChild xmlchild
+        xmlelem.appendchild xmldom.createTextNode(vbCrLf)
+        xmlelem.insertBefore xmldom.createTextNode(vbCrLf), xmlchild
+        Set xmlelem = xmlchild
+        name = ""
+        mode = 1
+      Case """"
+        value = ""
+        mode = 5
+      Case " "
+      Case Chr(9)
+      Case Chr(10)
+      Case Chr(13)
+      Case Else
+        value = ch
+        mode = 7
+      End Select
+    Case 5
+      Select Case ch
+      Case """"
+        xmlelem.setAttribute name, value
+        mode = 1
+      Case "\"
+        mode = 6
+      Case Else
+        value = value + ch
+      End Select
+   Case 6
+      value = value + ch
+      mode = 5
+    Case 7
+      If Instr("}], " & Chr(9) & vbCr & vbLf, ch) = 0 Then
+        value = value + ch
+      Else
+        xmlelem.setAttribute name, value
+        mode = 1
+        Select Case ch
+        Case "}"
+          Set xmlelem = xmlelem.parentNode
+        Case "]"
+          Set xmlelem = xmlelem.parentNode
+        End Select
+      End If
+    End Select
+  Wend
+
+  Set JSONtoXML = xmlDom
+End Function
+
+function getSettoDone(allstates)
+getSettoDone = "00000000"
+dim arr
+dim arr2
+dim a
+
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	if arr2(2) = "Done" then
+	getSettoDone = arr2(0)
+	end if
+end if
+next
+
+end function
+
+function donethismonth(allstates, ym)
+donethismonth = false
+'allstates = date||from||to@@...
+dim arr
+dim arr2
+dim a
+
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	'response.write ym & " - " & arr2(0) & "-" & arr2(1) & "-" & arr2(2) & "-" & "<br>"
+	if arr2(2) = "Done" then
+	if mid(arr2(0), 1, 6) = ym then
+		donethismonth = true
+	end if
+	end if
+end if
+next
+end function
+
+function countVali(allstates)
+'take first date, take last date, subtract, if 0 then result is 1
+dim arr
+dim arr2
+dim a
+dim dt1
+dim dt2
+countVali = 0
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	if arr2(1) = "Validation Tracking" then
+	if arr2(2) = "In Validation" then
+		countVali = countVali + 1
+	end if
+	end if
+end if
+next
+end function
+
+function countInvali(allstates)
+'take first date, take last date, subtract, if 0 then result is 1
+dim arr
+dim arr2
+dim a
+dim dt1
+dim dt2
+countInvali = 0
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	if arr2(1) = "Validation Tracking" and arr2(2) <> "Done" then
+	if arr2(1) = "Validation Tracking" and arr2(2) <> "Validation Tracking" then
+		countInvali = countInvali + 1
+	end if
+	end if
+end if
+next
+
+'if objrec2("oldstring") = "In Validation" and objrec2("newstring") <> "Done" then
+'if objrec2("oldstring") = "In Validation" and objrec2("newstring") <> "Validation Tracking" then
+'	invali = invali + 1
+'end if
+'end if
+
+end function
+
+Function CountinProgress(created, allstates)
+'loop through all transitions, if an item is 'in progress (all but Done, Cancelled, Backlog)' then count the # of days
+Dim arr
+Dim arr2
+Dim a
+Dim dt
+Dim prevdate
+
+'allstates = created & "||" & "<new>" & "||" & "Open" & "@@"
+CountinProgress = 0
+arr = Split(allstates, "@@")
+prevdate = DateSerial(Mid(created, 1, 4), Mid(created, 5, 2), Mid(created, 7, 2))
+For a = LBound(arr) To UBound(arr)
+If arr(a) <> "" Then
+    arr2 = Split(arr(a), "||")
+    'did we move to an not in progres state?
+    If arr2(2) <> "Done" And arr2(2) <> "Cancelled" And arr2(2) <> "Backlog" Then
+        dt = DateSerial(Mid(arr2(0), 1, 4), Mid(arr2(0), 5, 2), Mid(arr2(0), 7, 2))
+        CountinProgress = CountinProgress + DateDiff("d", prevdate, dt)
+    End If
+    prevdate = DateSerial(Mid(arr2(0), 1, 4), Mid(arr2(0), 5, 2), Mid(arr2(0), 7, 2))
+    'If a = LBound(arr) Then dt1 = DateSerial(Mid(arr2(0), 1, 4), Mid(arr2(0), 5, 2), Mid(arr2(0), 7, 2))
+    'If a = UBound(arr) - 1 Then dt2 = DateSerial(Mid(arr2(0), 1, 4), Mid(arr2(0), 5, 2), Mid(arr2(0), 7, 2))
+    'End If
+    
+End If
+Next
+'CountinProgress = DateDiff("d", dt1, dt2)
+'If CountinProgress = 0 Then CountinProgress = 1
+End Function
+
+function countSumOfDays(allstates)
+'take first date, take last date, subtract, if 0 then result is 1
+dim arr
+dim arr2
+dim a
+dim dt1
+dim dt2
+
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	if a = lbound(arr) then dt1 = dateserial(mid(arr2(0),1,4),mid(arr2(0),5,2),mid(arr2(0),7,2))
+	if a = ubound(arr)-1 then dt2 = dateserial(mid(arr2(0),1,4),mid(arr2(0),5,2),mid(arr2(0),7,2))
+end if
+next
+countSumOfDays = datediff("d", dt1, dt2)
+if countSumOfDays = 0 then countSumOfDays = 1
+end function
+
+function getSprintEndDate(s)
+'multiple sprint may be attached, take the latest one
+'IN : ["com.atlassian.greenhopper.service.sprint.Sprint@790ac54f[id=11467,rapidViewId=3248,state=CLOSED,name=SDP Sprint 1,startDate=2017-11-13T06:12:41.559Z,endDate=2017-11-27T06:12:00.000Z,completeDate=2017-11-29T09:20:45.503Z,sequence=11467]","com.atlassian.greenhopper.service.sprint.Sprint@728aac4a[id=12185,rapidViewId=3248,state=CLOSED,name=SDP Sprint 2,startDate=2018-02-12T12:02:27.361Z,endDate=2018-02-26T12:02:00.000Z,completeDate=2018-02-23T11:26:35.645Z,sequence=12185]"]
+dim arr
+dim arr2
+dim a
+dim tmp
+getSprintEndDate = "00000000"
+arr = split(s, ",")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "=")
+	if arr2(0) = "endDate" then
+		tmp = mid(arr2(1),1,4)&mid(arr2(1),6,2)&mid(arr2(1),9,2)
+		'response.write s & "##" & tmp & "<br>"
+
+		'since we might have multiple sprints check if this one is the latest
+		if tmp > getSprintEndDate then getSprintEndDate = tmp
+	end if
+end if
+next
+'if nothing found then return empty
+if getSprintEndDate = "00000000" then getSprintEndDate = ""
+end function
+
+function itemRejected(allstates)
+'in = 20180226||Open||Breakdown@@20180226||Breakdown||Breakdown Done@@20180302||Breakdown Done||Development@@20180302||Development||Development Done@@20180305||Development Done||Validation@@20180305||Validation||Done
+dim arr
+dim arr2
+dim a
+itemRejected = false
+arr = split(allstates, "@@")
+for a = lbound(arr) to ubound(arr)
+if arr(a) <> "" then
+	arr2 = split(arr(a), "||")
+	if arr2(1) = "Validation" and arr2(2) <> "Done" then
+	itemRejected = true
+	end if
+end if
+next
+end function
+
+function xmlsafe(s)
+xmlsafe = s
+xmlsafe = replace(xmlsafe, "&", "&amp;")
+xmlsafe = replace(xmlsafe, "<", "&lt;")
+xmlsafe = replace(xmlsafe, ">", "&gt;")
+xmlsafe = replace(xmlsafe, chr(11), "")
+end function

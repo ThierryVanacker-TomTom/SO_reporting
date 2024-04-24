@@ -28,7 +28,7 @@ webClient.Headers.Add("Authorization", "Bearer " & "NjEwNTg3NTc5NjU0Ot6RDMksA3OJ
 webClient.Headers.Add("X-Atlassian-Token", "nocheck") 
 
 Dim result As String 
-'result = webClient.DownloadString("http://127.0.0.1/getsuppipeitem.asp?id=1")
+'result = webClient.DownloadString("https://soreporting.azurewebsites.net/getsuppipeitem.asp?id=1")
 Dim url As String
 dim prj as string
 
