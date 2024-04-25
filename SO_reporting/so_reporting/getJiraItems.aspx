@@ -61,7 +61,7 @@ dim a
 'response.Write (now)
 
 response.write (result)
-'responsE.end
+responsE.end
 
 Dim MySerializer As JavaScriptSerializer = New JavaScriptSerializer()
 MySerializer.MaxJsonLength = 86753090
