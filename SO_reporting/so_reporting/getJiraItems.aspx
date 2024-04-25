@@ -60,7 +60,7 @@ dim arr
 dim a
 'response.Write (now)
 
-'response.write (result)
+response.write (result)
 'responsE.end
 
 Dim MySerializer As JavaScriptSerializer = New JavaScriptSerializer()
@@ -484,7 +484,7 @@ webClient.Headers.Add("X-Atlassian-Token", "nocheck")
 	getHist_ = result
 'catch e as exception
 'response.write ("HelpLink : " &	e.HelpLink 		& "<br>")	'Link to the help file associated with this exception.
-''response.write ("InnerException : " & e.InnerException 	& "<br>")	'A reference to the inner exception葉he exception that originally occurred, if this exception is based on a previous exception. Exceptions can be nested. That is, when a procedure throws an exception, it can nest another exception inside the exception it's raising, passing both exceptions out to the caller. The InnerException property gives access to the inner exception.
+''response.write ("InnerException : " & e.InnerException 	& "<br>")	'A reference to the inner exceptionﾂ葉he exception that originally occurred, if this exception is based on a previous exception. Exceptions can be nested. That is, when a procedure throws an exception, it can nest another exception inside the exception it's raising, passing both exceptions out to the caller. The InnerException property gives access to the inner exception.
 'response.write ("Message : " &	e.Message 		& "<br>")	'Error message text.
 'response.write ("StackTrace : " &	e.StackTrace 	& "<br>")	'The stack trace, as a single string, at the point the error occurred.
 ''response.write ("TargetSite : " &	e.TargetSite 	& "<br>")	'The name of the method that raised the exception.
@@ -548,7 +548,7 @@ For Each pair In parentJson
 next
 'catch e as exception
 'response.write ("HelpLink : " &	e.HelpLink 		& "<br>")	'Link to the help file associated with this exception.
-''response.write ("InnerException : " & e.InnerException 	& "<br>")	'A reference to the inner exception葉he exception that originally occurred, if this exception is based on a previous exception. Exceptions can be nested. That is, when a procedure throws an exception, it can nest another exception inside the exception it's raising, passing both exceptions out to the caller. The InnerException property gives access to the inner exception.
+''response.write ("InnerException : " & e.InnerException 	& "<br>")	'A reference to the inner exceptionﾂ葉he exception that originally occurred, if this exception is based on a previous exception. Exceptions can be nested. That is, when a procedure throws an exception, it can nest another exception inside the exception it's raising, passing both exceptions out to the caller. The InnerException property gives access to the inner exception.
 'response.write ("Message : " &	e.Message 		& "<br>")	'Error message text.
 'response.write ("StackTrace : " &	e.StackTrace 	& "<br>")	'The stack trace, as a single string, at the point the error occurred.
 ''response.write ("TargetSite : " &	e.TargetSite 	& "<br>")	'The name of the method that raised the exception.
