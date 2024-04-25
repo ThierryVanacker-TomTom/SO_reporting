@@ -127,6 +127,8 @@
     <Content Include="so_reporting\PI Metric Sheet Template Box Plot Percentage 2014.xlsx" />
     <Content Include="so_reporting\PI Work Item On Time Delivery Miss Rate 2018.xlsx" />
     <Content Include="so_reporting\PI Work Item Rejection Rate 2018.xlsx" />
+    <Content Include="so_reporting\web.config" />
+    <Content Include="src_reporting\web.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
